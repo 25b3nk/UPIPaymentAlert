@@ -3,6 +3,7 @@
 ## To Do
 
 - [x] Read SMS
+- [x] Add TTS functionality
 - [ ] Read SMS and announce the payment (RegEx)
 - [ ] Use notification to validate the SMS read
 - [ ] Use UPI reference number to validate the transaction before announcing

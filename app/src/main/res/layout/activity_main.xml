@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_margin="16dp"
-        android:text="Payment alert"
+        android:text="UPI Payment alert"
         android:textSize="32sp" />
 
     <Button
