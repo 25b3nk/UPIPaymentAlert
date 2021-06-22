@@ -1,8 +1,11 @@
 package com.example.upipaymentalert;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.ContentResolver;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,6 +13,7 @@ import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -29,38 +33,46 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
     }
 
     public void readSMS(View v) {
-        mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
-        if (mCursor.moveToFirst()) {
-            String msgData = "";
-            String address = "";
-            String body = "";
-            for(int idx = 0; idx < mCursor.getColumnCount(); idx++)
-            {
-                if (mCursor.getColumnName(idx).toLowerCase().compareTo("address") == 0) {
-                    Log.v("Reading SMS", mCursor.getColumnName(idx).toLowerCase());
-                    address = mCursor.getString(idx);
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_SMS) !=
+                PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { Manifest.permission.READ_SMS }, 123);
+        }
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_SMS) ==
+                PackageManager.PERMISSION_GRANTED) {
+            mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+            if (mCursor.moveToFirst()) {
+                String msgData = "";
+                String address = "";
+                String body = "";
+                for (int idx = 0; idx < mCursor.getColumnCount(); idx++) {
+                    if (mCursor.getColumnName(idx).toLowerCase().compareTo("address") == 0) {
+                        Log.v("Reading SMS", mCursor.getColumnName(idx).toLowerCase());
+                        address = mCursor.getString(idx);
+                    } else if (mCursor.getColumnName(idx).toLowerCase().compareTo("body") == 0) {
+                        body = mCursor.getString(idx);
+                    }
+                    msgData += " " + mCursor.getColumnName(idx) + ":" + mCursor.getString(idx);
                 }
-                else if (mCursor.getColumnName(idx).toLowerCase().compareTo("body") == 0) {
-                    body = mCursor.getString(idx);
+                Log.v("Reading SMS", msgData);
+                TextView viewSMS = findViewById(R.id.view_sms_tv);
+                String textToDisplay = "Address: " + address + "\n\nBody: " + body;
+                String textToSpeak = "Received text: " + body + "; from " + address;
+                viewSMS.setText(textToDisplay);
+                int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
+                if (ret == -1) {
+                    Log.e("TTS", "TTS Speak gave an error");
+                } else if (ret == 0) {
+                    Log.v("TTS", "Successful TTS");
                 }
-                msgData += " " + mCursor.getColumnName(idx) + ":" + mCursor.getString(idx);
             }
-            Log.v("Reading SMS", msgData);
-            TextView viewSMS = findViewById(R.id.view_sms_tv);
-            String textToDisplay = "Address: " + address + "\n\nBody: " + body;
-            String textToSpeak = "Received text: " + body + "; from "  + address;
-            viewSMS.setText(textToDisplay);
-            int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
-            if (ret == -1) {
-                Log.e("TTS", "TTS Speak gave an error");
-            }
-            else if (ret == 0) {
-                Log.v("TTS", "Successful TTS");
-            }
+        }
+        else {
+            Toast.makeText(this, "Please provide read SMS permission", Toast.LENGTH_LONG);
         }
     }
 
