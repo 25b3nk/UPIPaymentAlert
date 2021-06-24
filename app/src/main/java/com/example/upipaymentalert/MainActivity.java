@@ -16,6 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     Cursor mCursor;
@@ -33,6 +35,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private String getAmountFromMessageBody(String body) {
+        Pattern p = Pattern.compile("(?i)(?:(?:RS|INR|MRP)\\.?\\s?)(\\d+(:?\\,\\d+)?(\\,\\d+)?(\\.\\d{1,2})?)");
+        Matcher m = p.matcher(body);
+        String amount = "";
+        if (m.find()) {
+            amount = m.group(1);
+        }
+        Log.v("Regex", "Amount: " + amount);
+        return amount;
     }
 
     public void readSMS(View v) {
@@ -61,13 +74,17 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("Reading SMS", msgData);
                 TextView viewSMS = findViewById(R.id.view_sms_tv);
                 String textToDisplay = "Address: " + address + "\n\nBody: " + body;
-                String textToSpeak = "Received text: " + body + "; from " + address;
+                String amount = getAmountFromMessageBody(body);
+//                String textToSpeak = "Received text: " + body + "; from " + address;
                 viewSMS.setText(textToDisplay);
-                int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
-                if (ret == -1) {
-                    Log.e("TTS", "TTS Speak gave an error");
-                } else if (ret == 0) {
-                    Log.v("TTS", "Successful TTS");
+                if (amount.compareTo("") != 0) {
+                    String textToSpeak = "Received rupees" + amount;
+                    int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
+                    if (ret == -1) {
+                        Log.e("TTS", "TTS Speak gave an error");
+                    } else if (ret == 0) {
+                        Log.v("TTS", "Successful TTS");
+                    }
                 }
             }
         }
