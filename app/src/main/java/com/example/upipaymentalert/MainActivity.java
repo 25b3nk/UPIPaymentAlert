@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
                 String paisa = amount[1];
                 viewSMS.setText(textToDisplay);
                 StringBuilder textToSpeak = new StringBuilder("Received payment of ");
-                System.out.println("Here " + amount[0]);
                 if (Integer.parseInt(rupees) != 0) {
                     textToSpeak.append(rupees).append(" rupees");
                 }
