@@ -1,3 +1,6 @@
+package com.example.upipaymentalert;
+
+
 import android.Manifest;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -54,7 +57,6 @@ class AnnounceSMS extends Context implements Runnable {
         mCursor = cursorInput;
     }
 
-
     private String getAmountFromMessageBody(String body) {
         Pattern p = Pattern.compile("(?i)(?:(?:RS|INR|MRP)\\.?\\s?)(\\d+(:?\\,\\d+)?(\\,\\d+)?(\\.\\d{1,2})?)");
         Matcher m = p.matcher(body);
@@ -67,6 +69,8 @@ class AnnounceSMS extends Context implements Runnable {
     }
 
     private void readSMS() {
+        // TODO : Move check permission to MainActivity
+        // TODO : Start the service only when SMS permission is available
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.READ_SMS) ==
                 PackageManager.PERMISSION_GRANTED) {
@@ -527,26 +531,6 @@ class AnnounceSMS extends Context implements Runnable {
     }
 
     @Override
-    public int checkPermission(@NonNull String permission, int pid, int uid) {
-        return 0;
-    }
-
-    @Override
-    public int checkCallingPermission(@NonNull String permission) {
-        return 0;
-    }
-
-    @Override
-    public int checkCallingOrSelfPermission(@NonNull String permission) {
-        return 0;
-    }
-
-    @Override
-    public int checkSelfPermission(@NonNull String permission) {
-        return 0;
-    }
-
-    @Override
     public void enforcePermission(@NonNull String permission, int pid, int uid, @Nullable String message) {
 
     }
@@ -574,26 +558,6 @@ class AnnounceSMS extends Context implements Runnable {
     @Override
     public void revokeUriPermission(String toPackage, Uri uri, int modeFlags) {
 
-    }
-
-    @Override
-    public int checkUriPermission(Uri uri, int pid, int uid, int modeFlags) {
-        return 0;
-    }
-
-    @Override
-    public int checkCallingUriPermission(Uri uri, int modeFlags) {
-        return 0;
-    }
-
-    @Override
-    public int checkCallingOrSelfUriPermission(Uri uri, int modeFlags) {
-        return 0;
-    }
-
-    @Override
-    public int checkUriPermission(@Nullable Uri uri, @Nullable String readPermission, @Nullable String writePermission, int pid, int uid, int modeFlags) {
-        return 0;
     }
 
     @Override
@@ -648,13 +612,12 @@ class AnnounceSMS extends Context implements Runnable {
 }
 
 public class AnnouncementService extends Service {
-    Cursor mCursor;
+    Cursor mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
     AnnounceSMS smsThread;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
         smsThread = new AnnounceSMS(mCursor);
     }
 
