@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.content.ContentResolver;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -27,39 +27,35 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mTTS = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if(status != TextToSpeech.ERROR) {
-                    mTTS.setLanguage(Locale.UK);
-                }
+        mTTS = new TextToSpeech(getApplicationContext(), status -> {
+            if (status != TextToSpeech.ERROR) {
+                mTTS.setLanguage(Locale.UK);
             }
         });
     }
 
-    private String getAmountFromMessageBody(String body) {
-        Pattern p = Pattern.compile("(?i)(?:(?:RS|INR|MRP)\\.?\\s?)(\\d+(:?\\,\\d+)?(\\,\\d+)?(\\.\\d{1,2})?)");
+    private String[] getAmountFromMessageBody(String body) {
+        Pattern p = Pattern.compile("(?i)(?:(?:RS|INR|MRP)\\.?\\s?)(\\d+(:?,\\d+)?(,\\d+)?(\\.\\d{1,2})?)");
         Matcher m = p.matcher(body);
-        String amount = "";
+        String[] amount = new String[2];
         if (m.find()) {
-            amount = m.group(1);
+            amount = m.group(1).split("\\.", 2);
         }
-        Log.v("Regex", "Amount: " + amount);
+        Log.v("Regex", "Amount: " + amount[0] + amount[1]);
         return amount;
     }
 
+    @SuppressLint("ShowToast")
     public void readSMS(View v) {
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.READ_SMS) !=
-                PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] { Manifest.permission.READ_SMS }, 123);
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_SMS}, 123);
+            return;
         }
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.READ_SMS) ==
-                PackageManager.PERMISSION_GRANTED) {
+        if (permission == PackageManager.PERMISSION_GRANTED) {
             mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
             if (mCursor.moveToFirst()) {
-                String msgData = "";
+                StringBuilder msgData = new StringBuilder();
                 String address = "";
                 String body = "";
                 for (int idx = 0; idx < mCursor.getColumnCount(); idx++) {
@@ -69,26 +65,31 @@ public class MainActivity extends AppCompatActivity {
                     } else if (mCursor.getColumnName(idx).toLowerCase().compareTo("body") == 0) {
                         body = mCursor.getString(idx);
                     }
-                    msgData += " " + mCursor.getColumnName(idx) + ":" + mCursor.getString(idx);
+                    msgData.append(" ").append(mCursor.getColumnName(idx)).append(":").append(mCursor.getString(idx));
                 }
-                Log.v("Reading SMS", msgData);
+                Log.v("Reading SMS", msgData.toString());
                 TextView viewSMS = findViewById(R.id.view_sms_tv);
                 String textToDisplay = "Address: " + address + "\n\nBody: " + body;
-                String amount = getAmountFromMessageBody(body);
-//                String textToSpeak = "Received text: " + body + "; from " + address;
+                String[] amount = getAmountFromMessageBody(body);
+                String rupees = amount[0];
+                String paisa = amount[1];
                 viewSMS.setText(textToDisplay);
-                if (amount.compareTo("") != 0) {
-                    String textToSpeak = "Received rupees" + amount;
-                    int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
-                    if (ret == -1) {
-                        Log.e("TTS", "TTS Speak gave an error");
-                    } else if (ret == 0) {
-                        Log.v("TTS", "Successful TTS");
-                    }
+                StringBuilder textToSpeak = new StringBuilder("Received payment of ");
+                System.out.println("Here " + amount[0]);
+                if (Integer.parseInt(rupees) != 0) {
+                    textToSpeak.append(rupees).append(" rupees");
+                }
+                if (Integer.parseInt(paisa) != 0) {
+                    textToSpeak.append(" and ").append(paisa).append(" paisa");
+                }
+                int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
+                if (ret == -1) {
+                    Log.e("TTS", "TTS Speak gave an error");
+                } else if (ret == 0) {
+                    Log.v("TTS", "Successful TTS");
                 }
             }
-        }
-        else {
+        } else {
             Toast.makeText(this, "Please provide read SMS permission", Toast.LENGTH_LONG);
         }
     }
