@@ -16,3 +16,4 @@
 1. [Adding TTS](https://www.tutorialspoint.com/android/android_text_to_speech.htm)
 1. [Request permission](https://developer.android.com/training/permissions/requesting#manage-request-code-yourself)
 1. [Regex for extracting amount from SMS](https://stackoverflow.com/a/37409435/5258060)
+1. [Background services and intents blog](https://proandroiddev.com/deep-dive-into-android-services-4830b8c9a09)

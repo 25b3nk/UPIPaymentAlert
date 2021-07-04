@@ -25,14 +25,14 @@
         android:onClick="readSMS"
         android:text="Read latest SMS" />
 
-    <TextView
-        android:id="@+id/view_sms_tv"
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/start_button"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/read_button"
         android:layout_centerHorizontal="true"
         android:layout_margin="16dp"
-        android:text=""
-        android:textSize="32sp" />
+        android:onClick="startService"
+        android:text="Read latest SMS" />
 
 </RelativeLayout>

@@ -5,6 +5,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -22,11 +23,13 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
     Cursor mCursor;
     TextToSpeech mTTS;
+    Intent mIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mIntent = new Intent(this, AnnouncementService.class);
         mTTS = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -72,11 +75,9 @@ public class MainActivity extends AppCompatActivity {
                     msgData += " " + mCursor.getColumnName(idx) + ":" + mCursor.getString(idx);
                 }
                 Log.v("Reading SMS", msgData);
-                TextView viewSMS = findViewById(R.id.view_sms_tv);
                 String textToDisplay = "Address: " + address + "\n\nBody: " + body;
                 String amount = getAmountFromMessageBody(body);
 //                String textToSpeak = "Received text: " + body + "; from " + address;
-                viewSMS.setText(textToDisplay);
                 if (amount.compareTo("") != 0) {
                     String textToSpeak = "Received rupees" + amount;
                     int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
@@ -91,6 +92,15 @@ public class MainActivity extends AppCompatActivity {
         else {
             Toast.makeText(this, "Please provide read SMS permission", Toast.LENGTH_LONG);
         }
+    }
+
+    public void startService(View v) {
+        startService(mIntent);
+    }
+
+
+    public void stopService(View v) {
+        stopService(mIntent);
     }
 
     @Override
