@@ -28,8 +28,6 @@ public class MainActivity extends AppCompatActivity {
         mTTS = new TextToSpeech(getApplicationContext(), status -> {
             if (status != TextToSpeech.ERROR) {
                 mTTS.setLanguage(Locale.UK);
-            } else {
-                System.out.println("Not working");
             }
         });
         manageSMSPermission();
