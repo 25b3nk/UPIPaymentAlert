@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
         mTTS = new TextToSpeech(getApplicationContext(), status -> {
             if (status != TextToSpeech.ERROR) {
                 mTTS.setLanguage(Locale.UK);
+            } else {
+                System.out.println("Not working");
             }
         });
         manageSMSPermission();
@@ -42,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         int receiveSMSPermission = ContextCompat.checkSelfPermission(getBaseContext(), Manifest.permission.RECEIVE_SMS);
 
         if (readSMSPermission != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_SMS}, 43391);
+            requestPermissions(new String[]{Manifest.permission.RECEIVE_SMS}, 43391);
         }
 
         if (receiveSMSPermission != PackageManager.PERMISSION_GRANTED) {
@@ -55,9 +57,9 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 43391 || requestCode == 123) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d("adnan", "Sms Receive Permissions granted");
+                Log.d("app permission", "Granted Permission for " + requestCode);
             } else {
-                Log.d("adnan", "Sms Receive Permissions denied");
+                Log.d("app permission", "Permission Denied for " + requestCode);
             }
         }
     }
