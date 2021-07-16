@@ -31,8 +31,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         manageSMSPermission();
-        SmsParser smsParser = new SmsParser(mTTS);
-        SmsListener broadcastReceiver = new SmsListener(this, smsParser);
+        SmsListener broadcastReceiver = new SmsListener(this, new SmsParser());
         IntentFilter callInterceptorIntentFilter = new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
         registerReceiver(broadcastReceiver, callInterceptorIntentFilter);
     }

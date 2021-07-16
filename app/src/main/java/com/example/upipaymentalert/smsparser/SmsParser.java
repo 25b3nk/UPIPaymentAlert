@@ -1,6 +1,5 @@
 package com.example.upipaymentalert.smsparser;
 
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
 import java.util.Objects;
@@ -8,12 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SmsParser {
-
-    TextToSpeech mTTS;
-
-    public SmsParser(TextToSpeech mTTS) {
-        this.mTTS = mTTS;
-    }
 
     public String getAmountFromMessageBody(String body) {
         String smsParseRegex = "(?i)(?:(?:RS|INR|MRP)\\.?\\s?)(\\d+(:?,\\d+)?(,\\d+)?(\\.\\d{1,2})?)";
