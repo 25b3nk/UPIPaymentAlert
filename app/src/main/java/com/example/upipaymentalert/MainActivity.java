@@ -27,7 +27,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_SMS) !=
+                PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { Manifest.permission.READ_SMS }, 123);
+        }
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_SMS) ==
+                PackageManager.PERMISSION_GRANTED) {
+            mCursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+        }
         mIntent = new Intent(this, AnnouncementService.class);
         mTTS = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -94,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startService(View v) {
+        Log.v("SMS", "Start of service from button");
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.READ_SMS) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -106,10 +116,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Cannot start service without read SMS permission", Toast.LENGTH_LONG);
         }
+        Log.v("SMS", "Start of service from button done");
     }
 
 
     public void stopService(View v) {
+        Log.v("SMS", "Stop service button is clicked");
         stopService(new Intent(this, AnnouncementService.class));
     }
 
