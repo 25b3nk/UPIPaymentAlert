@@ -32,9 +32,9 @@ public class SmsListener extends BroadcastReceiver {
                 }
                 String textToDisplay = "Address: " + address + "\n\nBody: " + messageBody;
                 Log.v("Reading SMS", textToDisplay);
-                mainActivity.updateTextBox(textToDisplay);
+//                mainActivity.updateTextBox(textToDisplay);
                 String textToRead = smsParser.getAmountFromMessageBody(messageBody.toString());
-                mainActivity.readText(textToRead);
+//                mainActivity.readText(textToRead);
             }
         }
 

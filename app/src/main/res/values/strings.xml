@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">UPIPaymentAlert</string>
+    <string name="channel_name">NOTIFICATION_CHANNEL</string>
+    <string name="channel_description">Main notification for the app</string>
 </resources>
