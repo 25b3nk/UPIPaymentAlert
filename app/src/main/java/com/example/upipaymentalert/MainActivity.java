@@ -1,46 +1,69 @@
 package com.example.upipaymentalert;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.provider.Telephony;
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.upipaymentalert.broadcastreciever.SmsListener;
-import com.example.upipaymentalert.smsparser.SmsParser;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    TextToSpeech mTTS;
     Intent mIntent;
+    NotificationCompat.Builder mNotificationBuilder;
+    NotificationManagerCompat mNotificationManager;
+    final String CHANNEL_ID = "CHANNEL_ID";
+    final int CHANNEL_ID_NUM = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mTTS = new TextToSpeech(getApplicationContext(), status -> {
-            if (status != TextToSpeech.ERROR) {
-                mTTS.setLanguage(Locale.UK);
-            }
-        });
+        mIntent = new Intent(this, AnnouncementService.class);
         manageSMSPermission();
-        SmsListener broadcastReceiver = new SmsListener(this, new SmsParser());
-        IntentFilter callInterceptorIntentFilter = new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
-        registerReceiver(broadcastReceiver, callInterceptorIntentFilter);
+        buildNotification();
+
+    }
+
+    private void buildNotification() {
+        // Create notification channel for Android version >= Android O
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+        // Create an explicit intent for an Activity in your app
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+//        Intent intent2 = new Intent(this, AnnouncementService.class);
+//        PendingIntent pendingIntent2 = PendingIntent.getService(this, 0, intent2, PendingIntent.FLAG_CANCEL_CURRENT);
+        mNotificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("UPA")
+                .setContentText("UPI Payment Alert")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(false)
+                .setOngoing(true);
+        mNotificationManager = NotificationManagerCompat.from(this);
     }
 
     private void manageSMSPermission() {
@@ -68,22 +91,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void updateTextBox(String textToDisplay) {
-        TextView viewSMS = findViewById(R.id.view_sms_tv);
-        viewSMS.setText(textToDisplay);
-    }
-
-    public void readText(String textToSpeak) {
-        int ret = mTTS.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "1");
-        if (ret == -1) {
-            Log.e("TTS", "TTS Speak gave an error");
-        } else if (ret == 0) {
-            Log.v("TTS", "Successful TTS");
-        }
-    }
-
     public void startService(View v) {
         Log.v("SMS", "Start of service from button");
+        mNotificationManager.notify(CHANNEL_ID_NUM, mNotificationBuilder.build());
+        startBGService();
+    }
+
+    private void startBGService() {
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.READ_SMS) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -92,22 +106,25 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.READ_SMS) ==
                 PackageManager.PERMISSION_GRANTED) {
-            startService(new Intent(this, AnnouncementService.class));
+            startService(mIntent);
         } else {
-            Toast.makeText(this, "Cannot start service without read SMS permission", Toast.LENGTH_LONG);
+            Toast.makeText(this, "Cannot start service without read SMS permission", Toast.LENGTH_LONG).show();
         }
         Log.v("SMS", "Start of service from button done");
     }
 
-
     public void stopService(View v) {
         Log.v("SMS", "Stop service button is clicked");
-        stopService(new Intent(this, AnnouncementService.class));
+        stopBGService();
+    }
+
+    public void stopBGService() {
+        stopService(mIntent);
+        mNotificationManager.cancel(CHANNEL_ID_NUM);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mTTS.shutdown();
     }
 }
